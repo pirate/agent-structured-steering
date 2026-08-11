@@ -1,0 +1,33 @@
+.gitignore
+  s_c15f7c201e212c::t_ee5a762949a396 1-2
+Package.swift
+  s_c15f7c201e212c::t_6d416cdeef6704 1-14
+Sources/SteeringOverlay/Models.swift
+  s_c15f7c201e212c::t_8087911ee14c19 1-78
+Sources/SteeringOverlay/main.swift
+  s_c15f7c201e212c::t_751f84839245b0 1-333
+demo-state.json
+  s_c15f7c201e212c::t_0c2605c792482a 1
+observer.py
+  s_c15f7c201e212c::t_b0565cd877ff66 1-553
+run.sh
+  s_c15f7c201e212c::t_a62705fcc17a7b 1-64
+status-surface.schema.json
+  s_c15f7c201e212c::t_599b060f148b1e 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "14c72b7b8cd28d5ada1d6734eafbfc16c4ff7172",
+  "prompts": {},
+  "sessions": {
+    "s_c15f7c201e212c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ff2ab-f8f9-7312-b9e6-940f1a60027f",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Nick Sweeting <git@sweeting.me>"
+    }
+  }
+}

@@ -481,18 +481,27 @@ struct ControlRow: View {
 
   private var actionIcons: some View {
     VStack(spacing: 3) {
-      Button { store.togglePinned(for: control) } label: {
-        Image(systemName: control.salience == 1 ? "pin.fill" : "checkmark")
-          .foregroundStyle(control.salience == 1 ? Color.yellow : Color.secondary.opacity(0.4))
+      if editMode == .idle {
+        Button { store.togglePinned(for: control) } label: {
+          Image(systemName: control.salience == 1 ? "pin.fill" : "checkmark")
+            .foregroundStyle(control.salience == 1 ? Color.yellow : Color.secondary.opacity(0.4))
+        }
+        .opacity(control.salience == 1 || hovered ? 1 : 0)
+        .allowsHitTesting(control.salience == 1 || hovered)
+        Button { store.delete(control) } label: {
+          Image(systemName: "xmark")
+        }
+        .buttonStyle(DestructiveIconButtonStyle())
+        .opacity(hovered ? 1 : 0)
+        .allowsHitTesting(hovered)
+      } else {
+        Button(action: commitInput) {
+          Image(systemName: "checkmark").foregroundStyle(Color.green)
+        }
+        Button(action: cancelInput) {
+          Image(systemName: "xmark").foregroundStyle(Color.secondary)
+        }
       }
-      .opacity(control.salience == 1 || hovered ? 1 : 0)
-      .allowsHitTesting(control.salience == 1 || hovered)
-      Button { store.delete(control) } label: {
-        Image(systemName: "xmark")
-      }
-      .buttonStyle(DestructiveIconButtonStyle())
-      .opacity(hovered ? 1 : 0)
-      .allowsHitTesting(hovered)
     }
     .buttonStyle(.plain)
     .font(.system(size: 14, weight: .semibold))
@@ -600,6 +609,17 @@ struct ControlRow: View {
     store.addOption(draftOption, for: control)
     editMode = .idle
     focusedField = nil
+  }
+
+  private func commitInput() {
+    switch editMode {
+    case .idle:
+      break
+    case .text:
+      commitText()
+    case .option:
+      commitOption()
+    }
   }
 
   private func cancelInput() {

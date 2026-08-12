@@ -1,0 +1,38 @@
+build-app.sh
+  s_2c774146deb763::t_e6904f20ed37a0 40
+  s_2c774146deb763::t_103da73352231b 16,25
+  s_2c774146deb763::t_d4a36a0659492e 1-9,11-15,17-24,26-39,41-45,51-56
+  s_2c774146deb763::t_bcaafa569f8876 10
+  s_2c774146deb763::t_496d3369d6d41b 46-50
+Sources/SteeringOverlay/main.swift
+  s_2c774146deb763::t_e6904f20ed37a0 882-883
+  s_2c774146deb763::t_320c7704e4ae4d 740-743,745,782-783,790,805,807,817,821-831,833-835,879-880
+  s_2c774146deb763::t_4f2acb59cbf043 729-730,734-737,744,784-789,791-804,806,808-816,818-820,832,836-862,884,886
+  s_2c774146deb763::t_76dfb2936d2b9d 863
+observer.py
+  s_2c774146deb763::t_4f2acb59cbf043 10,45,50-53,57-76,84-134,138,140-150,542-543
+  s_2c774146deb763::t_22b882adeee706 54-56,77-83,135-137,139
+  s_2c774146deb763::t_320c7704e4ae4d 23
+.gitignore
+  s_2c774146deb763::t_d4a36a0659492e 3
+README.md
+  s_2c774146deb763::t_699693c7103984 268-269
+  s_2c774146deb763::t_d4a36a0659492e 236-241,245-248,255-256,259-260
+  s_2c774146deb763::t_e6904f20ed37a0 242-244
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "9464f6e4bf7a50a52202fc27f37bcce6763f2d0f",
+  "prompts": {},
+  "sessions": {
+    "s_2c774146deb763": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ff244-00a8-7350-b3b3-ec99eb66cf80",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Nick Sweeting <git@sweeting.me>"
+    }
+  }
+}

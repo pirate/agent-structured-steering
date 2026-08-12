@@ -1,0 +1,19 @@
+Sources/SteeringOverlay/main.swift
+  s_2c774146deb763::t_cdc9fea26d3649 363,366-368
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "dcd9e7148972d6fe3690bf2ee66063b1b191c5dc",
+  "prompts": {},
+  "sessions": {
+    "s_2c774146deb763": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ff244-00a8-7350-b3b3-ec99eb66cf80",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Nick Sweeting <git@sweeting.me>"
+    }
+  }
+}

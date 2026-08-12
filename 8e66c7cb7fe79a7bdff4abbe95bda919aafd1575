@@ -1,0 +1,21 @@
+observer.py
+  s_2c774146deb763::t_b126c34ddc77e7 16,20,31-45,305-306,511,514-520,597-599
+status-surface.schema.json
+  s_2c774146deb763::t_417dac30e959e2 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "8e66c7cb7fe79a7bdff4abbe95bda919aafd1575",
+  "prompts": {},
+  "sessions": {
+    "s_2c774146deb763": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ff244-00a8-7350-b3b3-ec99eb66cf80",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Nick Sweeting <git@sweeting.me>"
+    }
+  }
+}

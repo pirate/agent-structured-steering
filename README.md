@@ -1,4 +1,6 @@
-# Fixing The Assumptions Problem: Dynamic Structured Steering for Codex
+# Too Many Assumptions <br/> Structured Steering For Coding Agents
+
+![Dynamic structured steering over a real ArchiveBox validation session](screenshots/archivebox-validation-session.png)
 
 Coding agents make dozens of small policy decisions while they work. Should a change receive a focused regression test or broad coverage? Does a breaking API change need an adapter? Should the agent stop after preparing a patch, open a pull request, or deploy the result? These choices are often absent from the initial request because their relevance only becomes clear after the agent has inspected the repository.
 
@@ -44,7 +46,7 @@ The main coding agent already has an implementation loop to manage. Maintaining 
 - the previous surface;
 - timestamped events from direct UI changes;
 - a strict output schema;
-- instructions to return active controls followed by useful recent implicit assumptions.
+- instructions to return useful current and recent implicit assumptions.
 
 The observer has no tools and cannot edit files. Its job is to identify consequential assumptions in the agent's plan or work trajectory, exclude decisions the user has already made explicitly, and infer the value the agent is currently acting on.
 
@@ -82,8 +84,13 @@ The PoC uses JSON shaped like this:
       "options": ["breaking them now", "preserving temporary adapters"],
       "selected": ["breaking them now"],
       "emoji": "🔧",
-      "color": "orange",
-      "help": "Controls whether this migration keeps old callers working"
+      "salience": 0,
+      "help": "Controls whether this migration keeps old callers working",
+      "enabled": true,
+      "value": 0,
+      "min": 0,
+      "max": 1,
+      "step": 1
     },
     {
       "id": "test_scope",
@@ -92,20 +99,27 @@ The PoC uses JSON shaped like this:
       "options": ["the changed surface", "every migration path"],
       "selected": ["the changed surface"],
       "emoji": "🧪",
-      "color": "green",
-      "help": "Controls how far test coverage expands beyond the edited behavior"
+      "salience": 0,
+      "help": "Controls how far test coverage expands beyond the edited behavior",
+      "enabled": true,
+      "value": 0,
+      "min": 0,
+      "max": 1,
+      "step": 1
     }
   ]
 }
 ```
 
-The schema caps the number of controls, label lengths, option counts, and total serialized size. Colors come from a small semantic palette. Each control kind has a precise value shape, allowing desktop, terminal, web, and mobile clients to render the same state without evaluating model-authored code.
+The schema caps the number of controls, label lengths, option counts, and total serialized size. Each control kind has a precise value shape, allowing desktop, terminal, web, and mobile clients to render the same state without evaluating model-authored code.
 
 Stable IDs let a selection survive a cosmetic label change. An ID remains stable only while its semantics remain stable; reusing `test_scope` for an unrelated decision would make historical events ambiguous. A monotonic revision lets every writer detect stale state.
 
+A single user-owned `salience` integer supports lightweight curation without another state layer. `+1` means sticky and important, while `0` means neutral and recalculable. The sticky value moves the complete control record into the upper section and preserves it across observer recalculation. Every change advances the revision, so a later click can intentionally remind the model again; unchanged signatures still suppress automatic repetition. Deletion uses the existing provenance event stream to prevent immediate regeneration rather than adding a second canonical store. UI styling and hook sections are derived from the same control record.
+
 ## One canonical state, two writers
 
-The panel and the coding agent operate on the same canonical per-thread state file. The panel updates it atomically when the user clicks a toggle or selects an option. The observer updates it after reconciling a changed transcript. The agent can read or update it through a small command interface:
+The panel and the coding agent operate on the same canonical per-thread state file. The panel updates it atomically when the user clicks a toggle, selects or adds an option, or edits a control's title and description. Text edits and custom options also pin the control, preserving the user's wording for the next hook injection. The observer updates the file after reconciling a changed transcript. The agent can read or update it through a small command interface:
 
 ```bash
 python3 observer.py --thread 019f... --get
@@ -120,7 +134,7 @@ python3 observer.py \
 
 Observer work follows the same rule. It records the revision it started from, runs inference, and discards the result if canonical state changed before inference completed. This matters because even a small observer can race with a quick user click.
 
-Revision changes are based on semantic control state rather than presentation text. A rewritten summary or status message does not increment the revision when IDs, options, and values remain unchanged. That detail keeps the model context stable and prevents an informational rephrase from invalidating an otherwise current update command.
+Revision changes are based on semantic control state rather than observer status. A status transition does not increment the revision when IDs, labels, options, and values remain unchanged. That detail keeps the model context stable and prevents observer activity from invalidating an otherwise current update command.
 
 ## Hooks make the state visible to the agent
 
@@ -154,17 +168,17 @@ The hook path also removes the need for clipboard exchange, pasted prompts, raw 
 
 ## Authority and provenance
 
-There are two ordinary ways a value changes. The observer can infer that the user wants comprehensive coverage after reading “cover the upgrade and rollback paths too,” or the user can select `comprehensive` directly. Both should update the display.
+There are two ordinary ways a value changes. For a neutral control, the observer can revise an assumption as the agent's stated plan changes. The user can also select a value directly, which pins the complete record and prevents later observer output from silently rewriting it.
 
 The event order is straightforward:
 
 ```text
-new explicit user message > earlier UI event
-new UI event > older inferred value
 higher-priority policy > every steering value
+pinned UI record > later observer inference
+new explicit user message > neutral inferred assumption
 ```
 
-A UI interaction is strong evidence because the user selected a typed value deliberately. It is still temporal. The user can change course later in chat, and the observer should reflect that newer instruction without forcing another click.
+A direct UI interaction is durable because the user selected a typed value deliberately. The observer preserves that record until the user unpins or deletes it. Explicit chat guidance resolves equivalent neutral assumptions instead of creating another control for a decision the user already made.
 
 The observer remains an untrusted proposer. It may summarize a preference or report task status; it cannot infer approval for a destructive action, create credentials, expand filesystem or network access, or convert a suggestion into authorization. Production implementations should retain the source and timestamp of the latest value even if the compact UI shows only a subtle inferred indicator.
 
@@ -188,7 +202,7 @@ runtime/
   active.json
 ```
 
-The hook path receives an exact `sessionId` from Codex, so model-context injection is naturally isolated. The standalone panel reads `active.json`, whose state and event paths point to one of these thread directories. An integrated client can bind the composer footer directly to the same thread-scoped record it already uses to render the conversation.
+The hook path receives an exact `sessionId` from Codex, so model-context injection is naturally isolated. The standalone panel reads the thread ID in `active.json` and derives that thread's state and event paths from the runtime directory. An integrated client can bind the composer footer directly to the same thread-scoped record it already uses to render the conversation.
 
 This division keeps the persistent model state independent from the presentation layer. Desktop, terminal, and web clients can select and render the appropriate surface without sharing controls globally, while hooks continue to inject state for the exact thread that triggered them.
 
@@ -265,19 +279,17 @@ Evaluation should measure interaction quality rather than whether an observer ca
 
 Dynamic structured steering gives a long-running agent session a visible place to hold the judgment calls that would otherwise remain buried in the agent's plan and implementation. The coding agent can continue by default, the observer can maintain a compact model of consequential assumptions, and the user can correct that model without turning every ambiguity into a blocking clarification exchange. Hooks make those values part of the agent's working context, while revisioned per-thread state keeps the UI and model synchronized. The two real-session tests show that the same small system can adapt its controls and selected values to substantially different work without forcing generic preferences into either conversation.
 
-## Screenshots
+## Another real session
 
-The same observer and overlay adapt to unrelated sessions without a hard-coded control set.
+The same observer and overlay adapted to an unrelated resume PDF task without carrying over the
+ArchiveBox session's release and testing assumptions.
 
 ![Structured steering during resume PDF work](screenshots/resume-session.png)
 
-![Structured steering during ArchiveBox validation](screenshots/archivebox-validation-session.png)
-
-![Popup spacing and mixed control types](screenshots/popup-spacing-fixed.png)
-
 ## Setup
 
-This proof of concept currently targets macOS. It requires Python 3, Swift through Xcode Command Line Tools, and an installed, authenticated `codex` CLI.
+This proof of concept currently targets macOS. It requires Python 3, Swift through Xcode Command
+Line Tools, and an installed, authenticated `codex` CLI.
 
 ```bash
 git clone https://github.com/pirate/agent-structured-steering.git
@@ -285,7 +297,9 @@ cd agent-structured-steering
 ./run.sh
 ```
 
-The first build may take a moment while Swift compiles the native overlay. The observer follows the foreground Codex session in ChatGPT/Codex Desktop or iTerm and stores per-thread state under `.build/steering-overlay/`.
+The first build may take a moment while Swift compiles the native overlay. The observer follows the
+foreground Codex session in ChatGPT/Codex Desktop or iTerm and stores per-thread state under
+`.build/steering-overlay/`.
 
 Use a specific Codex thread or observer model when needed:
 
@@ -300,7 +314,11 @@ Run the native UI against bundled sample state without making a model request:
 ./run.sh --demo
 ```
 
-The included [`.codex/hooks.json`](.codex/hooks.json) injects changed steering state when this repository is the active Codex workspace. Open `/hooks` in Codex once and approve the hook definition. To use the overlay while working in another repository, copy the hook definition into that repository's `.codex/hooks.json` and replace each `observer.py` path with the absolute path to this checkout.
+The included [`.codex/hooks.json`](.codex/hooks.json) injects changed steering state when this
+repository is the active Codex workspace. Open `/hooks` in Codex once and approve the hook
+definition. To use the overlay while working in another repository, copy the hook definition into
+that repository's `.codex/hooks.json` and replace each `observer.py` path with the absolute path to
+this checkout.
 
 The state can also be inspected or changed directly with revision checking:
 

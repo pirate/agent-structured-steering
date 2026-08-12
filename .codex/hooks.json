@@ -5,14 +5,14 @@
       "matcher": "startup|resume|clear|compact",
       "hooks": [{
         "type": "command",
-        "command": "python3 \"$(git rev-parse --show-toplevel)/observer.py\" --hook",
+        "command": "python3 \"$(git rev-parse --show-toplevel)/tools/steering-overlay-poc/observer.py\" --hook",
         "additionalContextLimit": 4000
       }]
     }],
     "UserPromptSubmit": [{
       "hooks": [{
         "type": "command",
-        "command": "python3 \"$(git rev-parse --show-toplevel)/observer.py\" --hook",
+        "command": "python3 \"$(git rev-parse --show-toplevel)/tools/steering-overlay-poc/observer.py\" --hook",
         "additionalContextLimit": 4000
       }]
     }],
@@ -20,7 +20,7 @@
       "matcher": ".*",
       "hooks": [{
         "type": "command",
-        "command": "python3 \"$(git rev-parse --show-toplevel)/observer.py\" --hook",
+        "command": "python3 \"$(git rev-parse --show-toplevel)/tools/steering-overlay-poc/observer.py\" --hook",
         "additionalContextLimit": 4000
       }]
     }],
@@ -28,7 +28,7 @@
       "matcher": ".*",
       "hooks": [{
         "type": "command",
-        "command": "python3 \"$(git rev-parse --show-toplevel)/observer.py\" --hook",
+        "command": "python3 \"$(git rev-parse --show-toplevel)/tools/steering-overlay-poc/observer.py\" --hook",
         "additionalContextLimit": 4000
       }]
     }]

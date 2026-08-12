@@ -85,7 +85,6 @@ hover. Users can edit an instruction and description or add a custom choice dire
       "options": ["breaking them now", "preserving temporary adapters"],
       "selected": ["breaking them now"],
       "emoji": "🔧",
-      "color": "orange",
       "help": "Controls whether this migration keeps old callers working"
     },
     {
@@ -95,15 +94,14 @@ hover. Users can edit an instruction and description or add a custom choice dire
       "options": ["the changed behavior", "every migration path"],
       "selected": ["the changed behavior"],
       "emoji": "🧪",
-      "color": "green",
       "help": "Controls test coverage beyond the edited behavior"
     }
   ]
 }
 ```
 
-The schema caps control count, text length, options, colors, and total JSON size. Stable IDs keep
-selections across label edits. A version number prevents old updates from overwriting new ones.
+The schema caps control count, text length, options, and generated JSON structure. Stable IDs keep
+selections across label edits. A revision prevents stale updates from overwriting new ones.
 
 ## How changes are saved
 
@@ -199,7 +197,7 @@ Each Codex session has its own controls, event log, message hash, and hash of th
 to the main agent:
 
 ```text
-runtime/
+.build/steering-overlay/
   threads/
     019f...resume/
       state.json
@@ -256,9 +254,21 @@ in Codex Desktop or iTerm and stores state under `.build/steering-overlay/`.
 
 Demo mode uses bundled state and makes no model request.
 
-The included [`.codex/hooks.json`](.codex/hooks.json) injects steering state for this workspace.
-Approve it once with `/hooks`. For another repository, copy the hook definition and set each
-`observer.py` command to this checkout's absolute path.
+Add this command to the global `SessionStart`, `UserPromptSubmit`, `PreToolUse`, and `PostToolUse`
+hook groups in `~/.codex/config.toml`, then approve the four entries once with `/hooks`:
+
+```toml
+[[hooks.UserPromptSubmit]]
+matcher = "*"
+
+[[hooks.UserPromptSubmit.hooks]]
+additional_context_limit = 4000
+command = "python3 /absolute/path/to/agent-structured-steering/observer.py --hook"
+type = "command"
+```
+
+Repeat that group with the other three event names. The absolute path makes the same per-session
+state available in every workspace.
 
 Inspect or edit state directly:
 

@@ -3,20 +3,64 @@ import SwiftUI
 
 private let overlayWidth: CGFloat = 500
 
+struct ObserverInfo: Codable, Equatable { let status: String }
+
+struct SurfaceControl: Codable, Equatable, Identifiable {
+  let id: String
+  var label: String
+  let kind: String
+  var help: String
+  let emoji: String
+  var enabled: Bool
+  var selected: [String]
+  var options: [String]
+  var value: Double
+  let min: Double
+  let max: Double
+  let step: Double
+  var salience: Int
+}
+
+struct SteeringSurface: Codable, Equatable {
+  var revision: Int
+  let threadId: String
+  let sessionTitle: String
+  let projectName: String
+  let summary: String
+  let observer: ObserverInfo
+  var controls: [SurfaceControl]
+}
+
+struct SteeringEvent: Codable {
+  let timestamp: String
+  let revision: Int
+  let control: SurfaceControl
+  let action: String
+  let source: String
+}
+
+struct ActiveSession: Decodable { let threadId: String }
+
+struct SurfaceSession: Identifiable, Equatable {
+  let surface: SteeringSurface
+  let directory: URL
+  var id: String { surface.threadId }
+}
+
 @MainActor
 final class SurfaceStore: ObservableObject {
   @Published private(set) var surface: SteeringSurface?
   @Published private(set) var sessions: [SurfaceSession] = []
   var onSurfaceChange: (() -> Void)?
 
-  private let configuration: AppConfiguration
+  private let activePath: String
   private var selectedDirectory: URL?
   private var selectedThreadId: String?
   private var lastActiveData: Data?
   private var timer: Timer?
 
-  init(configuration: AppConfiguration) {
-    self.configuration = configuration
+  init(activePath: String) {
+    self.activePath = activePath
     reload()
     timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
       Task { @MainActor in self?.reload() }
@@ -88,14 +132,14 @@ final class SurfaceStore: ObservableObject {
   }
 
   private func reload() {
-    if let activeData = FileManager.default.contents(atPath: configuration.activePath),
+    if let activeData = FileManager.default.contents(atPath: activePath),
       activeData != lastActiveData,
       let decoded = try? JSONDecoder().decode(ActiveSession.self, from: activeData)
     {
       lastActiveData = activeData
       selectedThreadId = decoded.threadId
     }
-    let threads = URL(fileURLWithPath: configuration.activePath)
+    let threads = URL(fileURLWithPath: activePath)
       .deletingLastPathComponent().appendingPathComponent("threads")
     let directories =
       (try? FileManager.default.contentsOfDirectory(
@@ -110,8 +154,8 @@ final class SurfaceStore: ObservableObject {
         directory: directory
       )
     }.sorted {
-      ($0.surface.sessionTitle ?? $0.id).localizedCaseInsensitiveCompare(
-        $1.surface.sessionTitle ?? $1.id) == .orderedAscending
+      $0.surface.sessionTitle.localizedCaseInsensitiveCompare($1.surface.sessionTitle)
+        == .orderedAscending
     }
     if sessions != discovered { sessions = discovered }
     let selected = sessions.first(where: { $0.id == selectedThreadId }) ?? sessions.first
@@ -223,8 +267,8 @@ struct OverlayView: View {
       Text(displayTitle(surface)).font(.system(size: 14, weight: .semibold))
         .fixedSize(horizontal: false, vertical: true)
         .layoutPriority(1)
-      if let projectName = surface.projectName, !projectName.isEmpty {
-        Text(projectName)
+      if !surface.projectName.isEmpty {
+        Text(surface.projectName)
           .font(.system(size: 9.5, weight: .medium))
           .foregroundStyle(.secondary)
           .fixedSize()
@@ -286,8 +330,7 @@ struct OverlayView: View {
   }
 
   private func displayTitle(_ surface: SteeringSurface) -> String {
-    (surface.sessionTitle ?? surface.threadId).components(separatedBy: .newlines).first
-      ?? surface.threadId
+    surface.sessionTitle.components(separatedBy: .newlines).first ?? surface.threadId
   }
 
 }
@@ -682,14 +725,14 @@ private final class SteeringPanel: NSPanel {
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
-  private let configuration: AppConfiguration
+  private let activePath: String
   private var panel: NSPanel?
   private var store: SurfaceStore?
 
-  init(configuration: AppConfiguration) { self.configuration = configuration }
+  init(activePath: String) { self.activePath = activePath }
 
   func applicationDidFinishLaunching(_: Notification) {
-    let store = SurfaceStore(configuration: configuration)
+    let store = SurfaceStore(activePath: activePath)
     let panel = SteeringPanel(
       contentRect: NSRect(x: 0, y: 0, width: overlayWidth, height: 300),
       styleMask: [.borderless, .nonactivatingPanel],
@@ -740,8 +783,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
   }
 }
 
+let arguments = CommandLine.arguments
+guard let activeIndex = arguments.firstIndex(of: "--active"),
+  arguments.indices.contains(activeIndex + 1)
+else {
+  fputs("usage: SteeringOverlay --active PATH\n", stderr)
+  exit(2)
+}
 let application = NSApplication.shared
-let delegate = AppDelegate(configuration: AppConfiguration.parse())
+let delegate = AppDelegate(activePath: arguments[activeIndex + 1])
 application.delegate = delegate
 application.setActivationPolicy(.accessory)
 application.run()

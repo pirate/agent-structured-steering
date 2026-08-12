@@ -508,9 +508,9 @@ struct ControlRow: View {
           .foregroundStyle(.secondary)
       }
       .buttonStyle(.plain)
-      .actionTooltip("Edit")
       .opacity(hovered ? 0.65 : 0)
       .allowsHitTesting(hovered)
+      .actionTooltip("Edit")
     }
   }
 
@@ -592,9 +592,9 @@ struct ControlRow: View {
               .foregroundStyle(.secondary)
           }
           .buttonStyle(.plain)
-          .actionTooltip("Add a new option")
           .opacity(hovered ? 0.65 : 0)
           .allowsHitTesting(hovered)
+          .actionTooltip("Add a new option")
         }
       }
     case "slider":

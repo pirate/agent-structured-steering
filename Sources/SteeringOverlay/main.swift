@@ -499,13 +499,20 @@ struct ControlRow: View {
   @ViewBuilder private var editor: some View {
     switch control.kind {
     case "toggle":
-      Toggle(
-        "",
-        isOn: Binding(
-          get: { control.enabled },
-          set: { store.setEnabled($0, for: control) }
+      VStack(spacing: 1) {
+        Text(control.enabled ? "YES" : "NO")
+          .font(.system(size: 9, weight: .bold, design: .rounded))
+          .foregroundStyle(control.enabled ? Color.green : Color.red)
+        Toggle(
+          "",
+          isOn: Binding(
+            get: { control.enabled },
+            set: { store.setEnabled($0, for: control) }
+          )
         )
-      ).labelsHidden().toggleStyle(.switch)
+        .labelsHidden()
+        .toggleStyle(.switch)
+      }
     case "choice":
       if editMode == .option {
         TextField("Add an option", text: $draftOption)

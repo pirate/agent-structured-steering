@@ -239,7 +239,9 @@ struct OverlayView: View {
         HStack(spacing: 5) {
           ForEach(store.sessions) { session in
             let selected = session.id == store.surface?.threadId
-            Button { store.select(session.id) } label: {
+            Button {
+              store.select(session.id)
+            } label: {
               VStack(spacing: 3) {
                 FocusMarqueeTabTitle(title: displayTitle(session.surface), selected: selected)
                 TabStatusBar(
@@ -474,6 +476,7 @@ struct ControlRow: View {
           .foregroundStyle(.secondary)
       }
       .buttonStyle(.plain)
+      .help("Edit")
       .opacity(hovered ? 0.65 : 0)
       .allowsHitTesting(hovered)
     }
@@ -482,25 +485,33 @@ struct ControlRow: View {
   private var actionIcons: some View {
     VStack(spacing: 3) {
       if editMode == .idle {
-        Button { store.togglePinned(for: control) } label: {
+        Button {
+          store.togglePinned(for: control)
+        } label: {
           Image(systemName: control.salience == 1 ? "pin.fill" : "checkmark")
             .foregroundStyle(control.salience == 1 ? Color.yellow : Color.secondary.opacity(0.4))
         }
+        .help(control.salience == 1 ? "Unpin" : "Mark correct & pin")
         .opacity(control.salience == 1 || hovered ? 1 : 0)
         .allowsHitTesting(control.salience == 1 || hovered)
-        Button { store.delete(control) } label: {
+        Button {
+          store.delete(control)
+        } label: {
           Image(systemName: "xmark")
         }
         .buttonStyle(DestructiveIconButtonStyle())
+        .help("Forget / remove")
         .opacity(hovered ? 1 : 0)
         .allowsHitTesting(hovered)
       } else {
         Button(action: commitInput) {
           Image(systemName: "checkmark").foregroundStyle(Color.green)
         }
+        .help("Save changes")
         Button(action: cancelInput) {
           Image(systemName: "xmark").foregroundStyle(Color.secondary)
         }
+        .help("Discard edits")
       }
     }
     .buttonStyle(.plain)
@@ -549,6 +560,7 @@ struct ControlRow: View {
               .foregroundStyle(.secondary)
           }
           .buttonStyle(.plain)
+          .help("Add a new option")
           .opacity(hovered ? 0.65 : 0)
           .allowsHitTesting(hovered)
         }
@@ -559,8 +571,8 @@ struct ControlRow: View {
           control.value.rounded() == control.value
             ? String(Int(control.value)) : String(format: "%.1f", control.value)
         )
-          .font(.system(size: 9.5, weight: .medium, design: .monospaced)).foregroundStyle(
-            .secondary)
+        .font(.system(size: 9.5, weight: .medium, design: .monospaced)).foregroundStyle(
+          .secondary)
         Slider(
           value: Binding(
             get: { control.value },

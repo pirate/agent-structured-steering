@@ -726,12 +726,23 @@ private final class SteeringPanel: NSPanel {
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
   private let activePath: String
+  private let resourcePath: String
+  private var observer: Process?
   private var panel: NSPanel?
   private var store: SurfaceStore?
 
-  init(activePath: String) { self.activePath = activePath }
+  init(activePath: String, resourcePath: String) {
+    self.activePath = activePath
+    self.resourcePath = resourcePath
+  }
 
   func applicationDidFinishLaunching(_: Notification) {
+    guard installHooksIfNeeded() else {
+      NSApplication.shared.terminate(nil)
+      return
+    }
+    installMenu()
+    startObserver()
     let store = SurfaceStore(activePath: activePath)
     let panel = SteeringPanel(
       contentRect: NSRect(x: 0, y: 0, width: overlayWidth, height: 300),
@@ -768,6 +779,88 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     self.panel = panel
   }
 
+  func applicationShouldTerminateAfterLastWindowClosed(_: NSApplication) -> Bool { true }
+
+  func applicationWillTerminate(_: Notification) { observer?.terminate() }
+
+  func applicationShouldHandleReopen(_: NSApplication, hasVisibleWindows _: Bool) -> Bool {
+    panel?.orderFrontRegardless()
+    return true
+  }
+
+  private func installHooksIfNeeded() -> Bool {
+    let defaults = UserDefaults.standard
+    let command = "python3 \"\(resourcePath)/observer.py\" --hook"
+    let firstLaunch = !defaults.bool(forKey: "hooksInstalled")
+    if firstLaunch {
+      let alert = NSAlert()
+      alert.messageText = "Install Structured Steering?"
+      alert.informativeText =
+        "This adds and approves four global Codex hooks so every session can automatically read its current assumptions. No clipboard or keyboard automation is used."
+      alert.addButton(withTitle: "Install Hooks")
+      alert.addButton(withTitle: "Quit")
+      alert.alertStyle = .informational
+      NSApplication.shared.activate(ignoringOtherApps: true)
+      guard alert.runModal() == .alertFirstButtonReturn else { return false }
+    }
+    guard firstLaunch || defaults.string(forKey: "hookCommand") != command else { return true }
+
+    let process = makeObserverProcess(arguments: ["--install-hooks"])
+    let errors = Pipe()
+    process.standardError = errors
+    do { try process.run() } catch { return installationFailed(error.localizedDescription) }
+    process.waitUntilExit()
+    guard process.terminationStatus == 0 else {
+      let detail = String(
+        data: errors.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)
+      return installationFailed(detail?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "")
+    }
+    defaults.set(true, forKey: "hooksInstalled")
+    defaults.set(command, forKey: "hookCommand")
+    return true
+  }
+
+  private func installationFailed(_ detail: String) -> Bool {
+    let alert = NSAlert()
+    alert.messageText = "Hooks could not be installed"
+    alert.informativeText = detail
+    alert.runModal()
+    return false
+  }
+
+  private func startObserver() {
+    let process = makeObserverProcess(arguments: [])
+    process.standardOutput = FileHandle.nullDevice
+    process.standardError = FileHandle.nullDevice
+    try? process.run()
+    observer = process
+  }
+
+  private func makeObserverProcess(arguments: [String]) -> Process {
+    let process = Process()
+    process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+    process.arguments = ["python3", "\(resourcePath)/observer.py"] + arguments
+    var environment = ProcessInfo.processInfo.environment
+    environment["PATH"] =
+      "/opt/homebrew/bin:/usr/local/bin:\(environment["HOME"] ?? "")/.local/bin:/usr/bin:/bin"
+    process.environment = environment
+    return process
+  }
+
+  private func installMenu() {
+    let menu = NSMenu()
+    let appItem = NSMenuItem()
+    let appMenu = NSMenu()
+    appMenu.addItem(
+      NSMenuItem(
+        title: "Quit Structured Steering",
+        action: #selector(NSApplication.terminate(_:)),
+        keyEquivalent: "q"))
+    appItem.submenu = appMenu
+    menu.addItem(appItem)
+    NSApplication.shared.mainMenu = menu
+  }
+
   func windowDidResize(_ notification: Notification) {
     guard let panel = notification.object as? NSPanel else { return }
     Self.anchor(panel)
@@ -783,15 +876,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
   }
 }
 
+let activePath = FileManager.default.homeDirectoryForCurrentUser
+  .appendingPathComponent("Library/Application Support/Structured Steering/active.json").path
 let arguments = CommandLine.arguments
-guard let activeIndex = arguments.firstIndex(of: "--active"),
-  arguments.indices.contains(activeIndex + 1)
-else {
-  fputs("usage: SteeringOverlay --active PATH\n", stderr)
-  exit(2)
-}
+let resourcePath =
+  arguments.firstIndex(of: "--resource-path").map { arguments[$0 + 1] }
+  ?? Bundle.main.resourcePath!
 let application = NSApplication.shared
-let delegate = AppDelegate(activePath: arguments[activeIndex + 1])
+let delegate = AppDelegate(activePath: activePath, resourcePath: resourcePath)
 application.delegate = delegate
 application.setActivationPolicy(.accessory)
 application.run()

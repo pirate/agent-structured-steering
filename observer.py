@@ -7,6 +7,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import shutil
 import sqlite3
 import subprocess
 import sys
@@ -19,7 +20,7 @@ DEFAULT_MODEL = "gpt-5.6-luna"
 OBSERVER_PROMPT_VERSION = "14"
 MAX_TRANSCRIPT_CHARS = 28_000
 ROOT = Path(__file__).parent
-RUNTIME = ROOT / ".build/steering-overlay"
+RUNTIME = Path.home() / "Library/Application Support/Structured Steering"
 ACTIVE = RUNTIME / "active.json"
 SCHEMA = ROOT / "status-surface.schema.json"
 IGNORED_USER_PREFIXES = (
@@ -41,8 +42,110 @@ def parse_args() -> argparse.Namespace:
     tools.add_argument("--get", action="store_true")
     tools.add_argument("--set", nargs=2, metavar=("CONTROL_ID", "VALUE"))
     tools.add_argument("--hook", action="store_true")
+    tools.add_argument("--install-hooks", action="store_true")
     parser.add_argument("--expected-revision", type=int)
     return parser.parse_args()
+
+
+def app_server_request(
+    process: subprocess.Popen[str], request_id: int, method: str, params: dict[str, Any]
+) -> dict[str, Any]:
+    assert process.stdin and process.stdout
+    process.stdin.write(
+        json.dumps({"id": request_id, "method": method, "params": params}) + "\n"
+    )
+    process.stdin.flush()
+    for line in process.stdout:
+        response = json.loads(line)
+        if response.get("id") == request_id:
+            return response
+    raise RuntimeError("Codex app-server closed unexpectedly")
+
+
+def install_hooks() -> int:
+    codex = shutil.which("codex")
+    if not codex:
+        raise SystemExit("Codex CLI was not found in PATH")
+    config = Path.home() / ".codex/config.toml"
+    try:
+        text = config.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        raise SystemExit("Codex config was not found at ~/.codex/config.toml") from None
+
+    command = f'python3 "{Path(__file__).resolve()}" --hook'
+    text = re.sub(
+        r"\n(?:# Structured Steering: [^\n]+\n)?"
+        r"\[\[hooks\.(SessionStart|UserPromptSubmit|PreToolUse|PostToolUse)\]\]\n"
+        r'(?:matcher = "\*"\n)?\n'
+        r"\[\[hooks\.\1\.hooks\]\]\n"
+        r"additional_context_limit = 4000\n"
+        r"command = [^\n]*observer\.py[^\n]*--hook[^\n]*\n"
+        r'type = "command"\n?',
+        "",
+        text,
+    ).rstrip()
+    for event in ("SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse"):
+        text += f'''\n\n# Structured Steering: {event}
+[[hooks.{event}]]
+matcher = "*"
+
+[[hooks.{event}.hooks]]
+additional_context_limit = 4000
+command = {json.dumps(command)}
+type = "command"'''
+    atomic_write(config, text)
+
+    process = subprocess.Popen(
+        [codex, "app-server"],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        text=True,
+    )
+    try:
+        app_server_request(
+            process,
+            1,
+            "initialize",
+            {
+                "clientInfo": {
+                    "name": "structured_steering",
+                    "title": "Structured Steering",
+                    "version": "1",
+                }
+            },
+        )
+        assert process.stdin
+        process.stdin.write('{"method":"initialized","params":{}}\n')
+        process.stdin.flush()
+        response = app_server_request(
+            process, 2, "hooks/list", {"cwds": [str(Path.home())]}
+        )
+        hooks = response["result"]["data"][0]["hooks"]
+        matches = [hook for hook in hooks if hook.get("command") == command]
+        if len(matches) != 4:
+            raise RuntimeError(f"expected four hooks, found {len(matches)}")
+        result = app_server_request(
+            process,
+            3,
+            "config/batchWrite",
+            {
+                "edits": [
+                    {
+                        "keyPath": f'hooks.state."{hook["key"]}".trusted_hash',
+                        "value": hook["currentHash"],
+                        "mergeStrategy": "replace",
+                    }
+                    for hook in matches
+                ],
+                "reloadUserConfig": True,
+            },
+        )
+        if "error" in result:
+            raise RuntimeError(result["error"]["message"])
+    finally:
+        process.terminate()
+    return 0
 
 
 def run_text(command: list[str]) -> str:
@@ -436,6 +539,8 @@ def run_hook(args: argparse.Namespace) -> int:
 
 def main() -> int:
     args = parse_args()
+    if args.install_hooks:
+        return install_hooks()
     if args.hook:
         return run_hook(args)
     if args.get or args.set:

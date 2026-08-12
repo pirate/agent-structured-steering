@@ -233,18 +233,31 @@ Evaluation should track irrelevant controls, generated values that users change,
 corrective chat turns, watcher latency and cost, cache-hit rate, rejected old updates, and results
 after simultaneous updates.
 
-## Setup
+## Install
+
+Download `Structured-Steering-1.0.0.zip` from the latest GitHub release, unzip it, and move
+`Structured Steering.app` to Applications. On first launch, click **Install Hooks**. Later launches
+open the overlay directly; its close button and **Command-Q** both quit the app.
+
+The overlay is a dockless background accessory with a nonactivating panel, so appearing, resizing,
+or refreshing never takes keyboard focus from Codex, iTerm, or another foreground app.
+
+The first launch writes and approves four global Codex hooks. The app repairs their absolute path
+if it is moved later. It never reads the clipboard or impersonates keyboard input.
+
+## Build from source
 
 Requires macOS, Python 3, Xcode Command Line Tools, and an authenticated `codex` CLI.
 
 ```bash
 git clone https://github.com/pirate/agent-structured-steering.git
 cd agent-structured-steering
-./run.sh
+./build-app.sh
+open "dist/Structured Steering.app"
 ```
 
-The first launch compiles the Swift popup. The watcher subagent follows the foreground Codex session
-in Codex Desktop or iTerm and stores state under `.build/steering-overlay/`.
+The watcher subagent follows the foreground Codex session in Codex Desktop or iTerm and stores
+state under `~/Library/Application Support/Structured Steering/`.
 
 ```bash
 ./run.sh --thread <codex-thread-id>
@@ -252,23 +265,8 @@ in Codex Desktop or iTerm and stores state under `.build/steering-overlay/`.
 ./run.sh --demo
 ```
 
-Demo mode uses bundled state and makes no model request.
-
-Add this command to the global `SessionStart`, `UserPromptSubmit`, `PreToolUse`, and `PostToolUse`
-hook groups in `~/.codex/config.toml`, then approve the four entries once with `/hooks`:
-
-```toml
-[[hooks.UserPromptSubmit]]
-matcher = "*"
-
-[[hooks.UserPromptSubmit.hooks]]
-additional_context_limit = 4000
-command = "python3 /absolute/path/to/agent-structured-steering/observer.py --hook"
-type = "command"
-```
-
-Repeat that group with the other three event names. The absolute path makes the same per-session
-state available in every workspace.
+Demo mode uses bundled state and makes no model request. The app handles global hook installation;
+source builds can run `python3 observer.py --install-hooks` to perform the same idempotent setup.
 
 Inspect or edit state directly:
 

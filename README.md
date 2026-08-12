@@ -63,11 +63,12 @@ Its prompt enforces these rules:
 
 This minimal reconciliation keeps the surface stable across observer runs.
 
-## Typed component protocol
+## Structured Steering Schema
 
-The model returns data for native controls. The client owns rendering, validation, layout, and
-accessibility. Row actions appear on hover. Users can edit an instruction and description or add a
-custom choice directly in the surface.
+The Structured Steering Schema defines the controls shown to users and the allowed fields for each
+control. Codex handles rendering, validation, layout, and accessibility. Row actions appear on
+hover. Users can edit an instruction and description or add a custom choice directly in the
+surface.
 
 ![Editing an assumption's title and description in place](screenshots/steering-overlay-editing.png)
 

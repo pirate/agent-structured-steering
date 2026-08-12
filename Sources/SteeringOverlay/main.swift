@@ -737,7 +737,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
   }
 
   func applicationDidFinishLaunching(_: Notification) {
-    guard installHooksIfNeeded() else {
+    guard updateHooks("--install-hooks") else {
       NSApplication.shared.terminate(nil)
       return
     }
@@ -781,54 +781,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
   func applicationShouldTerminateAfterLastWindowClosed(_: NSApplication) -> Bool { true }
 
-  func applicationWillTerminate(_: Notification) { observer?.terminate() }
+  func applicationWillTerminate(_: Notification) {
+    observer?.terminate()
+    _ = updateHooks("--uninstall-hooks")
+  }
 
   func applicationShouldHandleReopen(_: NSApplication, hasVisibleWindows _: Bool) -> Bool {
     panel?.orderFrontRegardless()
     return true
   }
 
-  private func installHooksIfNeeded() -> Bool {
-    let config =
-      (try? String(
-        contentsOf: FileManager.default.homeDirectoryForCurrentUser
-          .appendingPathComponent(".codex/config.toml"), encoding: .utf8)) ?? ""
-    let events = ["SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse"]
-    let installed = events.allSatisfy { config.contains("# Structured Steering: \($0)") }
-    if !installed {
-      let alert = NSAlert()
-      alert.messageText = "Install Structured Steering?"
-      alert.informativeText =
-        "This adds and approves four global Codex hooks so every session can automatically read its current assumptions."
-      alert.addButton(withTitle: "Install Hooks")
-      alert.addButton(withTitle: "Quit")
-      alert.alertStyle = .informational
-      NSApplication.shared.activate(ignoringOtherApps: true)
-      guard alert.runModal() == .alertFirstButtonReturn else { return false }
-    }
-    guard config.components(separatedBy: "\(resourcePath)/observer.py").count != 5 else {
-      return true
-    }
-
-    let process = makeObserverProcess(arguments: ["--install-hooks"])
-    let errors = Pipe()
-    process.standardError = errors
-    do { try process.run() } catch { return installationFailed(error.localizedDescription) }
+  private func updateHooks(_ action: String) -> Bool {
+    let process = makeObserverProcess(arguments: [action])
+    do { try process.run() } catch { return false }
     process.waitUntilExit()
-    guard process.terminationStatus == 0 else {
-      let detail = String(
-        data: errors.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)
-      return installationFailed(detail?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "")
-    }
-    return true
-  }
-
-  private func installationFailed(_ detail: String) -> Bool {
-    let alert = NSAlert()
-    alert.messageText = "Hooks could not be installed"
-    alert.informativeText = detail
-    alert.runModal()
-    return false
+    return process.terminationStatus == 0
   }
 
   private func startObserver() {

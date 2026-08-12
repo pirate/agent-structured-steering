@@ -236,14 +236,13 @@ after simultaneous updates.
 ## Install
 
 Download `Structured-Steering-1.0.0.zip` from the latest GitHub release, unzip it, and move
-`Structured Steering.app` to Applications. On first launch, click **Install Hooks**. Later launches
-open the overlay directly; its close button and **Command-Q** both quit the app.
+`Structured Steering.app` to Applications. Launch the app to open the overlay. Its close button and
+**Command-Q** quit it.
 
 The overlay is a dockless background accessory with a nonactivating panel, so appearing, resizing,
 or refreshing does not interrupt Codex, iTerm, or another foreground app.
 
-The first launch writes and approves four global Codex hooks. The app repairs their absolute path
-if it is moved later.
+The app registers its four Codex hooks while running.
 
 ## Build from source
 
@@ -265,8 +264,7 @@ state under `~/Library/Application Support/Structured Steering/`.
 ./run.sh --demo
 ```
 
-Demo mode uses bundled state and makes no model request. The app handles global hook installation;
-source builds can run `python3 observer.py --install-hooks` to perform the same idempotent setup.
+Demo mode uses bundled state and makes no model request.
 
 Inspect or edit state directly:
 

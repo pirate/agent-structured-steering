@@ -30,6 +30,15 @@ IGNORED_USER_PREFIXES = (
 CHATGPT_BUNDLE = "com.openai.codex"
 ITERM_BUNDLE = "com.googlecode.iterm2"
 THREAD_ID_PATTERN = re.compile(r"\bCODEX_THREAD_ID=([0-9a-f-]{36})\b")
+HOOK_PATTERN = re.compile(
+    r"\n(?:# Structured Steering: [^\n]+\n)?"
+    r"\[\[hooks\.(SessionStart|UserPromptSubmit|PreToolUse|PostToolUse)\]\]\n"
+    r'(?:matcher = "\*"\n)?\n'
+    r"\[\[hooks\.\1\.hooks\]\]\n"
+    r"additional_context_limit = 4000\n"
+    r"command = [^\n]*observer\.py[^\n]*--hook[^\n]*\n"
+    r'type = "command"\n?'
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -43,6 +52,7 @@ def parse_args() -> argparse.Namespace:
     tools.add_argument("--set", nargs=2, metavar=("CONTROL_ID", "VALUE"))
     tools.add_argument("--hook", action="store_true")
     tools.add_argument("--install-hooks", action="store_true")
+    tools.add_argument("--uninstall-hooks", action="store_true")
     parser.add_argument("--expected-revision", type=int)
     return parser.parse_args()
 
@@ -73,17 +83,7 @@ def install_hooks() -> int:
         raise SystemExit("Codex config was not found at ~/.codex/config.toml") from None
 
     command = f'python3 "{Path(__file__).resolve()}" --hook'
-    text = re.sub(
-        r"\n(?:# Structured Steering: [^\n]+\n)?"
-        r"\[\[hooks\.(SessionStart|UserPromptSubmit|PreToolUse|PostToolUse)\]\]\n"
-        r'(?:matcher = "\*"\n)?\n'
-        r"\[\[hooks\.\1\.hooks\]\]\n"
-        r"additional_context_limit = 4000\n"
-        r"command = [^\n]*observer\.py[^\n]*--hook[^\n]*\n"
-        r'type = "command"\n?',
-        "",
-        text,
-    ).rstrip()
+    text = HOOK_PATTERN.sub("", text).rstrip()
     for event in ("SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse"):
         text += f'''\n\n# Structured Steering: {event}
 [[hooks.{event}]]
@@ -145,6 +145,61 @@ type = "command"'''
             raise RuntimeError(result["error"]["message"])
     finally:
         process.terminate()
+    return 0
+
+
+def uninstall_hooks() -> int:
+    config = Path.home() / ".codex/config.toml"
+    try:
+        text = config.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return 0
+    command = f'python3 "{Path(__file__).resolve()}" --hook'
+    codex = shutil.which("codex")
+    hashes: set[str] = set()
+    if codex:
+        process = subprocess.Popen(
+            [codex, "app-server"],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+        )
+        try:
+            app_server_request(
+                process,
+                1,
+                "initialize",
+                {
+                    "clientInfo": {
+                        "name": "structured_steering",
+                        "title": "Structured Steering",
+                        "version": "1",
+                    }
+                },
+            )
+            assert process.stdin
+            process.stdin.write('{"method":"initialized","params":{}}\n')
+            process.stdin.flush()
+            response = app_server_request(process, 2, "hooks/list", {"cwds": []})
+            hashes = {
+                hook["currentHash"]
+                for group in response["result"]["data"]
+                for hook in group["hooks"]
+                if hook.get("command") == command
+            }
+        finally:
+            process.terminate()
+
+    text = HOOK_PATTERN.sub("", text)
+    if hashes:
+        values = "|".join(map(re.escape, hashes))
+        text = re.sub(
+            rf'\n\[hooks\.state\."[^"\n]+"\]\ntrusted_hash = "(?:{values})"\n?',
+            "",
+            text,
+        )
+    atomic_write(config, text.rstrip())
     return 0
 
 
@@ -541,6 +596,8 @@ def main() -> int:
     args = parse_args()
     if args.install_hooks:
         return install_hooks()
+    if args.uninstall_hooks:
+        return uninstall_hooks()
     if args.hook:
         return run_hook(args)
     if args.get or args.set:

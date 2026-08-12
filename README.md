@@ -1,4 +1,4 @@
-# Too Many Assumptions <br/> Structured Steering For Coding Agents
+# <i>Agents Making Too Many Assumptions?</i> <br/> Structured Steering For Coding Agents
 
 ![Dynamic structured steering over a real ArchiveBox validation session](screenshots/archivebox-validation-session.png)
 

@@ -6,11 +6,14 @@ APP="$ROOT/dist/Structured Steering.app"
 CONTENTS="$APP/Contents"
 ICON_SOURCE="$ROOT/Assets/AppIcon.png"
 
-swift build -c release --package-path "$ROOT"
+swift build -c release --package-path "$ROOT" \
+  -Xswiftc -file-prefix-map -Xswiftc "$ROOT=." \
+  -Xswiftc -debug-prefix-map -Xswiftc "$ROOT=."
 rm -rf "$APP"
 mkdir -p "$CONTENTS/MacOS" "$CONTENTS/Resources"
 cp "$ROOT/.build/release/SteeringOverlay" "$CONTENTS/MacOS/Structured Steering"
 cp "$ROOT/observer.py" "$ROOT/status-surface.schema.json" "$CONTENTS/Resources/"
+/usr/bin/strip -x "$CONTENTS/MacOS/Structured Steering"
 
 iconset="$ROOT/.build/AppIcon.iconset"
 rm -rf "$iconset"
@@ -30,7 +33,7 @@ cat >"$CONTENTS/Info.plist" <<PLIST
   <key>CFBundleDisplayName</key><string>Structured Steering</string>
   <key>CFBundleExecutable</key><string>Structured Steering</string>
   <key>CFBundleIconFile</key><string>AppIcon</string>
-  <key>CFBundleIdentifier</key><string>com.sweeting.structured-steering</string>
+  <key>CFBundleIdentifier</key><string>app.structured-steering</string>
   <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
   <key>CFBundleName</key><string>Structured Steering</string>
   <key>CFBundlePackageType</key><string>APPL</string>
@@ -52,5 +55,5 @@ codesign --force --deep --options runtime --sign "$identity" "$APP"
 codesign --verify --deep --strict --verbose=2 "$APP"
 
 mkdir -p "$ROOT/dist"
-ditto -c -k --sequesterRsrc --keepParent "$APP" "$ROOT/dist/Structured-Steering-${VERSION:-1.0.0}.zip"
+ditto -c -k --norsrc --keepParent "$APP" "$ROOT/dist/Structured-Steering-${VERSION:-1.0.0}.zip"
 echo "$APP"

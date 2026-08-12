@@ -1,0 +1,24 @@
+README.md
+  s_5f0fa1f0fdd065::t_66d863f81d3278 34,95-96
+  s_5f0fa1f0fdd065::t_d557631c80ad8a 10,28-30,54,235
+  s_5f0fa1f0fdd065::t_551dd1905a31df 69,105-106,108,110-112,116,119-120,122,137-139,141,143,153-154,157-159,165,178-180,182,184-185,193-194,196,198-199,217-218
+  s_5f0fa1f0fdd065::t_19283381989c16 11
+  s_5f0fa1f0fdd065::t_2818432b018e47 220,224-228,230-232,234,236,248-249
+  s_5f0fa1f0fdd065::t_3b4465bf4f0b99 5-7,9,13,24-26,38,40,42-43,45,47-48,56-58,63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "4d0b7dab7012249463d7e2241abcf52e884e24bc",
+  "prompts": {},
+  "sessions": {
+    "s_5f0fa1f0fdd065": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ff337-d2c8-72a1-ba27-77deb3848655",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Nick Sweeting <git@sweeting.me>"
+    }
+  }
+}

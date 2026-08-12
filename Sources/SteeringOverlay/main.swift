@@ -349,6 +349,38 @@ private struct DestructiveIconButtonStyle: ButtonStyle {
   }
 }
 
+private struct ActionTooltip: ViewModifier {
+  let text: String
+  @State private var visible = false
+
+  func body(content: Content) -> some View {
+    content
+      .onHover { visible = $0 }
+      .overlay(alignment: .trailing) {
+        if visible {
+          Text(text)
+            .font(.system(size: 9, weight: .medium))
+            .foregroundStyle(.primary)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 4)
+            .background(.regularMaterial, in: Capsule())
+            .overlay(Capsule().stroke(.white.opacity(0.12), lineWidth: 0.5))
+            .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
+            .fixedSize()
+            .offset(x: -28)
+            .allowsHitTesting(false)
+            .zIndex(10)
+        }
+      }
+  }
+}
+
+extension View {
+  fileprivate func actionTooltip(_ text: String) -> some View {
+    modifier(ActionTooltip(text: text))
+  }
+}
+
 private struct TabStatusBar: View {
   let color: Color
   let selected: Bool
@@ -476,7 +508,7 @@ struct ControlRow: View {
           .foregroundStyle(.secondary)
       }
       .buttonStyle(.plain)
-      .help("Edit")
+      .actionTooltip("Edit")
       .opacity(hovered ? 0.65 : 0)
       .allowsHitTesting(hovered)
     }
@@ -491,7 +523,7 @@ struct ControlRow: View {
           Image(systemName: control.salience == 1 ? "pin.fill" : "checkmark")
             .foregroundStyle(control.salience == 1 ? Color.yellow : Color.secondary.opacity(0.4))
         }
-        .help(control.salience == 1 ? "Unpin" : "Mark correct & pin")
+        .actionTooltip(control.salience == 1 ? "Unpin" : "Mark correct & pin")
         .opacity(control.salience == 1 || hovered ? 1 : 0)
         .allowsHitTesting(control.salience == 1 || hovered)
         Button {
@@ -500,18 +532,18 @@ struct ControlRow: View {
           Image(systemName: "xmark")
         }
         .buttonStyle(DestructiveIconButtonStyle())
-        .help("Forget / remove")
+        .actionTooltip("Forget / remove")
         .opacity(hovered ? 1 : 0)
         .allowsHitTesting(hovered)
       } else {
         Button(action: commitInput) {
           Image(systemName: "checkmark").foregroundStyle(Color.green)
         }
-        .help("Save changes")
+        .actionTooltip("Save changes")
         Button(action: cancelInput) {
           Image(systemName: "xmark").foregroundStyle(Color.secondary)
         }
-        .help("Discard edits")
+        .actionTooltip("Discard edits")
       }
     }
     .buttonStyle(.plain)
@@ -560,7 +592,7 @@ struct ControlRow: View {
               .foregroundStyle(.secondary)
           }
           .buttonStyle(.plain)
-          .help("Add a new option")
+          .actionTooltip("Add a new option")
           .opacity(hovered ? 0.65 : 0)
           .allowsHitTesting(hovered)
         }

@@ -13,10 +13,11 @@ import sys
 import tempfile
 import time
 from typing import Any
+import unicodedata
 
 
 DEFAULT_MODEL = "gpt-5.6-luna"
-OBSERVER_PROMPT_VERSION = "14"
+OBSERVER_PROMPT_VERSION = "15"
 MAX_TRANSCRIPT_CHARS = 28_000
 IGNORED_USER_PREFIXES = (
     "<environment_context>",
@@ -25,6 +26,21 @@ IGNORED_USER_PREFIXES = (
 CHATGPT_BUNDLE = "com.openai.codex"
 ITERM_BUNDLE = "com.googlecode.iterm2"
 THREAD_ID_PATTERN = re.compile(r"\bCODEX_THREAD_ID=([0-9a-f-]{36})\b")
+
+
+def normalized_summary(value: Any, fallback: Any = None) -> str:
+    for candidate in (value, fallback):
+        summary = " ".join(str(candidate or "").split())
+        if not 20 <= len(summary) <= 140 or summary[-1:] not in ".!?":
+            continue
+        if any(
+            unicodedata.category(character) == "Cf"
+            or (character.isalpha() and "LATIN" not in unicodedata.name(character, ""))
+            for character in summary
+        ):
+            continue
+        return summary
+    return "The agent is continuing the current task."
 
 
 def parse_args() -> argparse.Namespace:
@@ -286,7 +302,8 @@ Rules:
   condition. Keep choice options grammatically parallel, normally cased, and independently clear.
   Prefer observable outcomes over abstract degrees such as strict, exact, broad, or comprehensive.
 - Use one emoji and help text that clarifies the concrete consequence rather than decoding the
-  label. Write the summary as one plain sentence about current work.
+  label. Write the summary as one complete English sentence of 45-90 characters about current
+  work, ending in punctuation. Never truncate it, fill the schema limit, or mix writing systems.
 - salience is UI-owned reminder state: 1 means sticky and important, while 0 means neutral and
   recalculable. Copy its previous value for a preserved ID and use 0 for a new control. Never infer
   or change it from transcript text. A previous control with salience 1 is exempt from removal and
@@ -491,9 +508,16 @@ def main() -> int:
         changed = (
             surface.get("sessionTitle") != session_title
             or surface.get("projectName") != project_name
+            or surface.get("summary") != normalized_summary(surface.get("summary"))
         )
         if changed:
-            surface.update({"sessionTitle": session_title, "projectName": project_name})
+            surface.update(
+                {
+                    "sessionTitle": session_title,
+                    "projectName": project_name,
+                    "summary": normalized_summary(surface.get("summary")),
+                }
+            )
             atomic_write(state, surface)
     active_thread = ""
     active_session: tuple[str, Path, str, str] | None = None
@@ -569,6 +593,9 @@ def main() -> int:
                         args.model,
                         args.schema,
                         observer_prompt(messages, baseline, events),
+                    )
+                    surface["summary"] = normalized_summary(
+                        surface.get("summary"), previous.get("summary")
                     )
                     previous_controls = previous.get("controls", [])
                     previous_by_id = {

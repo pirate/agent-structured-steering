@@ -240,10 +240,10 @@ Download `Structured-Steering-1.0.0.zip` from the latest GitHub release, unzip i
 open the overlay directly; its close button and **Command-Q** both quit the app.
 
 The overlay is a dockless background accessory with a nonactivating panel, so appearing, resizing,
-or refreshing never takes keyboard focus from Codex, iTerm, or another foreground app.
+or refreshing does not interrupt Codex, iTerm, or another foreground app.
 
 The first launch writes and approves four global Codex hooks. The app repairs their absolute path
-if it is moved later. It never reads the clipboard or impersonates keyboard input.
+if it is moved later.
 
 ## Build from source
 

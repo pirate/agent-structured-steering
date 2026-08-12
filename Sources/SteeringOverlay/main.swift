@@ -718,7 +718,7 @@ struct ControlRow: View {
 }
 
 private final class SteeringPanel: NSPanel {
-  // The coding app stays active, while controls that accept text can still receive keyboard focus.
+  // Keep the coding app active while still allowing direct edits inside the panel.
   override var canBecomeKey: Bool { true }
   override var canBecomeMain: Bool { false }
 }
@@ -796,7 +796,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
       let alert = NSAlert()
       alert.messageText = "Install Structured Steering?"
       alert.informativeText =
-        "This adds and approves four global Codex hooks so every session can automatically read its current assumptions. No clipboard or keyboard automation is used."
+        "This adds and approves four global Codex hooks so every session can automatically read its current assumptions."
       alert.addButton(withTitle: "Install Hooks")
       alert.addButton(withTitle: "Quit")
       alert.alertStyle = .informational

@@ -1,5 +1,6 @@
 # <i>Agents Making Too Many Assumptions?</i> <br/> Use <ins>Structured Steering</ins> to Guide Them.
-![Dynamic structured steering over a real ArchiveBox validation session](screenshots/archivebox-validation-session.png)
+
+![The current structured steering overlay with session tabs, pinned assumptions, dropdowns, toggles, and hover actions](screenshots/steering-overlay-overview.png)
 
 Coding agents make dozens of small policy decisions while they work. Should a change receive a focused regression test or broad coverage? Does a breaking API change need an adapter? Should the agent stop after preparing a patch, open a pull request, or deploy the result? These choices are often absent from the initial request because their relevance only becomes clear after the agent has inspected the repository.
 
@@ -67,6 +68,14 @@ Passing the previous surface provides continuity and stable identifiers. It is t
 ## Typed components instead of generated HTML
 
 The model does not need to generate HTML. A compact component protocol gives the client enough information to render native controls while keeping accessibility, layout, validation, and interaction behavior under application control.
+
+Rows expose editing and deletion actions only on hover, keeping the idle surface quiet. Users can
+rewrite both the instruction and its description in place, or add a missing choice without falling
+back to a corrective chat turn.
+
+![Editing an assumption's title and description in place](screenshots/steering-overlay-editing.png)
+
+![Adding a custom option to a generated dropdown](screenshots/steering-overlay-add-option.png)
 
 The PoC uses JSON shaped like this:
 
@@ -218,8 +227,6 @@ The first thread was an academic resume editing session with a one-page PDF open
 
 It did not show tests, pull requests, compatibility, or deployment controls.
 
-![Dynamic steering controls for the real resume PDF session](screenshots/resume-session.png)
-
 ### ArchiveBox validation work
 
 The second thread began as ArchiveBox installation validation and had progressed into cache behavior and hook-timing comparison. Its surface was completely different:
@@ -228,8 +235,6 @@ The second thread began as ArchiveBox installation validation and had progressed
 - `Timing baseline` selected `readme-screenshot`.
 
 The selected values came from the latest applicable conversation evidence. The timing control is particularly useful because the user had explicitly required a hook-by-hook comparison against the README screenshot rather than a nearby aggregate timing metric.
-
-![Dynamic steering controls for the real ArchiveBox validation session](screenshots/archivebox-validation-session.png)
 
 The live test established that the observer can remove irrelevant defaults, generate task-specific controls, infer selected values, and keep state isolated under separate thread IDs. The same panel changed from document-layout decisions to cache and performance decisions using real conversation history, with no hard-coded control set for either task.
 
@@ -277,13 +282,6 @@ Evaluation should measure interaction quality rather than whether an observer ca
 - stale-write rejection and convergence after simultaneous chat and UI updates.
 
 Dynamic structured steering gives a long-running agent session a visible place to hold the judgment calls that would otherwise remain buried in the agent's plan and implementation. The coding agent can continue by default, the observer can maintain a compact model of consequential assumptions, and the user can correct that model without turning every ambiguity into a blocking clarification exchange. Hooks make those values part of the agent's working context, while revisioned per-thread state keeps the UI and model synchronized. The two real-session tests show that the same small system can adapt its controls and selected values to substantially different work without forcing generic preferences into either conversation.
-
-## Another real session
-
-The same observer and overlay adapted to an unrelated resume PDF task without carrying over the
-ArchiveBox session's release and testing assumptions.
-
-![Structured steering during resume PDF work](screenshots/resume-session.png)
 
 ## Setup
 

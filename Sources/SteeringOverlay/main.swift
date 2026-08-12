@@ -268,6 +268,11 @@ struct OverlayView: View {
           proxy.scrollTo(threadId, anchor: .center)
         }
       }
+      .onAppear {
+        if let threadId = store.surface?.threadId {
+          proxy.scrollTo(threadId, anchor: .center)
+        }
+      }
     }
   }
 

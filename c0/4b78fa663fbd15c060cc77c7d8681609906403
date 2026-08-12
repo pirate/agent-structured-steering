@@ -1,0 +1,37 @@
+Sources/SteeringOverlay/main.swift
+  s_2c774146deb763::t_351d6336696004 6-49,157-158,270,333
+  s_2c774146deb763::t_c25fbf6316a00c 271
+  s_2c774146deb763::t_3d83871a113c29 56,62-63,135,142,728,732,735,786-792,794
+README.md
+  s_2c774146deb763::t_e9c9219f10f2ba 200
+  s_2c774146deb763::t_bb810d514192cf 257-271
+  s_2c774146deb763::t_9e1dc806b1349a 103-104
+demo-state.json
+  s_2c774146deb763::t_8222fff0c47378 1
+observer.py
+  s_2c774146deb763::t_daf255154c8a28 290,307,403,518,541
+  s_2c774146deb763::t_2c5d2afe4aaf29 21-24,344,348,398,443,467,479,520,525-526,531
+  s_2c774146deb763::t_c25fbf6316a00c 464,498
+  s_2c774146deb763::t_10d63bebae9190 222,354,445,451-452,513,555,569
+  s_2c774146deb763::t_edcbca956d8ddf 338
+run.sh
+  s_2c774146deb763::t_d8462f5d06fd44 3,37-38
+  s_2c774146deb763::t_b4c2032c978779 5-8,13,17,21,31-34,39-41,43,45-51,53,59-60,64-65,67-68,70-71,76-79
+  s_2c774146deb763::t_aaa805f9d2d1d0 54-56,58
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "c04b78fa663fbd15c060cc77c7d8681609906403",
+  "prompts": {},
+  "sessions": {
+    "s_2c774146deb763": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ff244-00a8-7350-b3b3-ec99eb66cf80",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Nick Sweeting <git@sweeting.me>"
+    }
+  }
+}

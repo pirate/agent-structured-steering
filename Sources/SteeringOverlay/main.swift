@@ -772,7 +772,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
       }
     }
     store.onSurfaceChange = resizePanel
-    Self.anchor(panel)
+    Self.anchor(panel, to: NSScreen.screens.first)
     panel.orderFrontRegardless()
     resizePanel()
     self.store = store
@@ -789,10 +789,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
   }
 
   private func installHooksIfNeeded() -> Bool {
-    let defaults = UserDefaults.standard
-    let command = "python3 \"\(resourcePath)/observer.py\" --hook"
-    let firstLaunch = !defaults.bool(forKey: "hooksInstalled")
-    if firstLaunch {
+    let config =
+      (try? String(
+        contentsOf: FileManager.default.homeDirectoryForCurrentUser
+          .appendingPathComponent(".codex/config.toml"), encoding: .utf8)) ?? ""
+    let events = ["SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse"]
+    let installed = events.allSatisfy { config.contains("# Structured Steering: \($0)") }
+    if !installed {
       let alert = NSAlert()
       alert.messageText = "Install Structured Steering?"
       alert.informativeText =
@@ -803,7 +806,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
       NSApplication.shared.activate(ignoringOtherApps: true)
       guard alert.runModal() == .alertFirstButtonReturn else { return false }
     }
-    guard firstLaunch || defaults.string(forKey: "hookCommand") != command else { return true }
+    guard config.components(separatedBy: "\(resourcePath)/observer.py").count != 5 else {
+      return true
+    }
 
     let process = makeObserverProcess(arguments: ["--install-hooks"])
     let errors = Pipe()
@@ -815,8 +820,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         data: errors.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)
       return installationFailed(detail?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "")
     }
-    defaults.set(true, forKey: "hooksInstalled")
-    defaults.set(command, forKey: "hookCommand")
     return true
   }
 
@@ -863,11 +866,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
   func windowDidResize(_ notification: Notification) {
     guard let panel = notification.object as? NSPanel else { return }
-    Self.anchor(panel)
+    Self.anchor(panel, to: panel.screen)
   }
 
-  private static func anchor(_ panel: NSPanel) {
-    guard let screen = NSScreen.main else { return }
+  private static func anchor(_ panel: NSPanel, to screen: NSScreen?) {
+    guard let screen else { return }
     panel.setFrameOrigin(
       NSPoint(
         x: screen.visibleFrame.maxX - panel.frame.width - 18,

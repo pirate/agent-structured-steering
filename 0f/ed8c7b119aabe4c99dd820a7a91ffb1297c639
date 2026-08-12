@@ -1,0 +1,14 @@
+build-app.sh
+  h_923c208e183a7b 9-11,16,36,58
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "0fed8c7b119aabe4c99dd820a7a91ffb1297c639",
+  "prompts": {},
+  "humans": {
+    "h_923c208e183a7b": {
+      "author": "Nick Sweeting <git@sweeting.me>"
+    }
+  }
+}

@@ -435,6 +435,8 @@ struct ControlRow: View {
             .font(.system(size: 12, weight: control.salience == 1 ? .bold : .medium))
             .foregroundStyle(.primary)
             .fixedSize(horizontal: false, vertical: true)
+            .contentShape(Rectangle())
+            .onTapGesture(perform: beginEditing)
           if control.kind == "toggle" {
             HStack(alignment: .top, spacing: 12) {
               subtitle
@@ -464,6 +466,8 @@ struct ControlRow: View {
         .font(.system(size: 11.5))
         .foregroundStyle(Color.primary.opacity(0.35))
         .fixedSize(horizontal: false, vertical: true)
+        .contentShape(Rectangle())
+        .onTapGesture(perform: beginEditing)
       Button(action: beginEditing) {
         Image(systemName: "pencil")
           .font(.system(size: 8, weight: .medium))
@@ -513,6 +517,7 @@ struct ControlRow: View {
         .labelsHidden()
         .toggleStyle(.switch)
       }
+      .offset(y: -13)
     case "choice":
       if editMode == .option {
         TextField("Add an option", text: $draftOption)

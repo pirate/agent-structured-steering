@@ -730,6 +730,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
   private var observer: Process?
   private var panel: NSPanel?
   private var store: SurfaceStore?
+  private var keyMonitor: Any?
 
   init(activePath: String, resourcePath: String) {
     self.activePath = activePath
@@ -741,7 +742,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
       NSApplication.shared.terminate(nil)
       return
     }
-    installMenu()
     startObserver()
     let store = SurfaceStore(activePath: activePath)
     let panel = SteeringPanel(
@@ -777,12 +777,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     resizePanel()
     self.store = store
     self.panel = panel
+    keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak panel] event in
+      if panel?.isKeyWindow == true,
+        event.modifierFlags.contains(.command),
+        event.charactersIgnoringModifiers == "q"
+      {
+        NSApplication.shared.terminate(nil)
+        return nil
+      }
+      return event
+    }
   }
 
-  func applicationShouldTerminateAfterLastWindowClosed(_: NSApplication) -> Bool { true }
+  func applicationShouldTerminateAfterLastWindowClosed(_: NSApplication) -> Bool { false }
 
   func applicationWillTerminate(_: Notification) {
     observer?.terminate()
+    if let keyMonitor { NSEvent.removeMonitor(keyMonitor) }
     _ = updateHooks("--uninstall-hooks")
   }
 
@@ -815,20 +826,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
       "/opt/homebrew/bin:/usr/local/bin:\(environment["HOME"] ?? "")/.local/bin:/usr/bin:/bin"
     process.environment = environment
     return process
-  }
-
-  private func installMenu() {
-    let menu = NSMenu()
-    let appItem = NSMenuItem()
-    let appMenu = NSMenu()
-    appMenu.addItem(
-      NSMenuItem(
-        title: "Quit Structured Steering",
-        action: #selector(NSApplication.terminate(_:)),
-        keyEquivalent: "q"))
-    appItem.submenu = appMenu
-    menu.addItem(appItem)
-    NSApplication.shared.mainMenu = menu
   }
 
   func windowDidResize(_ notification: Notification) {

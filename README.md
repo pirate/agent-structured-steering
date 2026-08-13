@@ -9,9 +9,8 @@
 <img width="33%" src="screenshots/steering-overlay-overview.png"/><img width="33%" alt="Screenshot 2026-08-13 at 8 49 34 AM" src="https://github.com/user-attachments/assets/5efbce9f-59db-4b23-a429-476eacd98c34" /><img width="33%" alt="Screenshot 2026-08-13 at 8 48 32 AM" src="https://github.com/user-attachments/assets/c5d357e4-77ac-4afd-8b6a-faffa485a766" />
 
 <img width="33%" alt="Screenshot 2026-08-13 at 8 47 34 AM" src="https://github.com/user-attachments/assets/6c0fcbae-23e6-4ffc-8263-6a33264aa345" /><img width="33%" alt="Screenshot 2026-08-13 at 8 47 23 AM" src="https://github.com/user-attachments/assets/f1bac94d-9d04-47cb-844f-f2f429c668c4" /><img width="30%" alt="Screenshot 2026-08-13 at 8 48 06 AM" src="https://github.com/user-attachments/assets/f83d1d08-2d0f-4ec1-adf8-2cbc1845ae1a" />
-
+<br/>
 <img width="80%" alt="image" src="https://github.com/user-attachments/assets/84f064c1-1605-405f-b4cd-2bb2d06513db" />
-
 </p>
 
 During the process of normal AI-driven development, coding agents have to make tons of assumptions about your intent, the goals, and how to achieve them.

@@ -261,3 +261,11 @@ Inspect or edit state directly:
 python3 observer.py --get
 python3 observer.py --set <control-id> <value> --expected-revision <revision>
 ```
+
+## Related Projects
+
+- https://github.com/pirate/led-cube-agent-monitor (and this nifty device by someone else: https://sidepulse.io/)
+- https://github.com/pirate/iterm-agent-fork
+- https://github.com/pirate/mac-hardware-toys
+- https://github.com/pirate/security-growler
+- https://github.com/pirate/polyglot-agent

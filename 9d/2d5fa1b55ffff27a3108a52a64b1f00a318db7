@@ -1,0 +1,14 @@
+Sources/SteeringOverlay/main.swift
+  h_923c208e183a7b 733,780-789,792,796
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "9d2d5fa1b55ffff27a3108a52a64b1f00a318db7",
+  "prompts": {},
+  "humans": {
+    "h_923c208e183a7b": {
+      "author": "Nick Sweeting <git@sweeting.me>"
+    }
+  }
+}

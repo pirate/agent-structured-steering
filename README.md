@@ -1,5 +1,7 @@
 # <i>Agents Making Too Many Assumptions?</i> <br/> Use <ins>Structured Steering</ins> to Guide Them.
 
+<img width="687" height="440" alt="image" src="https://github.com/user-attachments/assets/1706d112-f307-465b-b2dc-0031f5284f7c" />
+
 ![The current structured steering overlay with session tabs, pinned assumptions, dropdowns, toggles, and hover actions](screenshots/steering-overlay-overview.png)
 
 Coding agents choose test scope, compatibility, pull-request structure, deployment, and stopping

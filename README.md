@@ -1,8 +1,16 @@
+
 # <i>Agents Making Too Many Assumptions?</i> <br/> Use <ins>Structured Steering</ins> to Guide Them.
 
-<img width="687" height="440" alt="image" src="https://github.com/user-attachments/assets/1706d112-f307-465b-b2dc-0031f5284f7c" />
+<p align="center">
+<a href="https://github.com/pirate/agent-structured-steering/releases"><img width="50%" alt="image" src="https://github.com/user-attachments/assets/1706d112-f307-465b-b2dc-0031f5284f7c" align="center" /><br/>
+⬇️ Download <code>Structured Steering.app</code> to try it!</a><br/>
 
-![The current structured steering overlay with session tabs, pinned assumptions, dropdowns, toggles, and hover actions](screenshots/steering-overlay-overview.png)
+
+<img width="33%" src="screenshots/steering-overlay-overview.png"/><img width="33%" alt="Screenshot 2026-08-13 at 8 49 34 AM" src="https://github.com/user-attachments/assets/5efbce9f-59db-4b23-a429-476eacd98c34" /><img width="33%" alt="Screenshot 2026-08-13 at 8 48 32 AM" src="https://github.com/user-attachments/assets/c5d357e4-77ac-4afd-8b6a-faffa485a766" />
+
+<img width="33%" alt="Screenshot 2026-08-13 at 8 47 34 AM" src="https://github.com/user-attachments/assets/6c0fcbae-23e6-4ffc-8263-6a33264aa345" /><img width="33%" alt="Screenshot 2026-08-13 at 8 47 23 AM" src="https://github.com/user-attachments/assets/f1bac94d-9d04-47cb-844f-f2f429c668c4" /><img width="30%" alt="Screenshot 2026-08-13 at 8 48 06 AM" src="https://github.com/user-attachments/assets/f83d1d08-2d0f-4ec1-adf8-2cbc1845ae1a" />
+</p>
+
 
 Coding agents choose test scope, compatibility, pull-request structure, deployment, and stopping
 conditions throughout a task. These decisions often emerge after repository inspection. Wrong

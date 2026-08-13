@@ -2,7 +2,7 @@
 # <i>Agents Making Too Many Assumptions?</i> <br/> Use <ins>Structured Steering</ins> to Guide Them.
 
 <p align="center">
-<a href="https://github.com/pirate/agent-structured-steering/releases"><img width="50%" alt="image" src="https://github.com/user-attachments/assets/1706d112-f307-465b-b2dc-0031f5284f7c" align="center" /><img width="50%" alt="image" src="https://github.com/user-attachments/assets/84f064c1-1605-405f-b4cd-2bb2d06513db" /><br/>
+<a href="https://github.com/pirate/agent-structured-steering/releases"><img width="45%" alt="image" src="https://github.com/user-attachments/assets/1706d112-f307-465b-b2dc-0031f5284f7c" align="center" /><img width="40%" align="top" src="https://github.com/user-attachments/assets/84f064c1-1605-405f-b4cd-2bb2d06513db" /><br/>
 ⬇️ Download <code>Structured Steering.app</code> to try it!</a><br/>
 
 
